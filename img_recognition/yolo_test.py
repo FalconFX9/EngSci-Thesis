@@ -1,12 +1,15 @@
+import numpy as np
+from math import atan2
 from ultralytics import YOLO
 import cv2
 import matplotlib.pyplot as plt
+from scipy import ndimage
 
 # Load a model
-model = YOLO("yolo11m-obb.pt")  # load an official model
+model = YOLO(".\\trained.pt")  # load an official model
 
 # Predict with the model
-results = model("./dish_spoon_simple.jpg") 
+results = model(".\\EKUD\\images\\val\\00000210.jpg") 
 
 def draw_rotated_rectangle(ax, center, width, height, angle, label, confidence):
     # Calculate the rectangle's 4 corner points
@@ -58,6 +61,40 @@ def plot_yolo_results(image_path, results):
     plt.show()
 
 
-plot_yolo_results("./dish_spoon_simple.jpg", results)
+def getOrientation(pts):
+    data_pts = pts.reshape(-1, 2).astype(np.float64)
+    mean, eigenvectors = cv2.PCACompute(data_pts, None)
+
+    cntr = tuple(mean[0].astype(int))
+    angle = np.degrees(np.arctan2(eigenvectors[0,1], eigenvectors[0,0]))
+
+    return angle, cntr
+
+def findAngle(img):
+    # Convert image to binary
+    #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, bw = cv2.threshold(img, 25, 255, cv2.THRESH_BINARY)
+
+    # Find all the contours in the thresholded image
+    contours, _ = cv2.findContours(bw, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    largest = max(contours, key=cv2.contourArea)
+    return getOrientation(largest)
+
+
+#print(results[0].boxes)
+
+img = results[0].orig_img 
+bbox = results[0].boxes.xyxy
+boxed_item = img[int(bbox[0][1]):int(bbox[0][3]), int(bbox[0][0]):int(bbox[0][2])]
+
+log_item = ndimage.gaussian_laplace(cv2.cvtColor(boxed_item, cv2.COLOR_BGR2GRAY), sigma=2)
+#plt.imshow(log_item, cmap='gray')
+#plt.show()
+angle, cntr = findAngle(log_item)
+sl = np.tan(np.radians(angle))
+plt.axline(cntr, slope=sl, color='blue')
+plt.imshow(boxed_item)
+plt.show()
+#plot_yolo_results(".\\EKUD\\images\\val\\00000388.jpg", results)
 
 

@@ -56,7 +56,7 @@ def display_yolo_bbox(image_path, bbox_path, output_path=None):
 
 # Example usage
 if __name__ == "__main__":
-    image_file = ".\\raw\\RAW IMAGES\\PIZZA_CUTTER\\pizzacutterraw1.jpg"
-    bbox_file = ".\\labels\\PIZZA_CUTTER\\pizzacutterbinary1.txt"
+    image_file = ".\\images\\train\\00000600.jpg"
+    bbox_file = ".\\labels\\train\\00000600.txt"
 
     display_yolo_bbox(image_file, bbox_file)
